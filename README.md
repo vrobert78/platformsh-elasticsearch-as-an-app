@@ -6,4 +6,6 @@ This project provides a starter kit to run Elasticsearch > 7.10 as an app hosted
 This is not a service, this is not managed by Platform.sh.<br/>
 This is consider as your own code, and you're responsible for it.<br/>
 
+Elasticsearch needs quite a lot of memory, please upgrade your plan to XLarge at least.
+
 **SECURITY** This template is not intended to be use on production. There is no authentication or security mecanism enabled.
