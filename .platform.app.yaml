@@ -1,0 +1,54 @@
+name: es
+type: java:11
+
+disk: 2048
+
+mounts:
+  "/logs":
+      source: local
+      source_path: "logs"
+  "/plugins":
+      source: local
+      source_path: "plugins"
+  "/config":
+      source: local
+      source_path: "config"
+  "/data":
+      source: local
+      source_path: "data"
+
+web:
+  commands:
+    start: |
+      ./bin/elasticsearch
+
+hooks:
+  build: |
+    set -e
+    export ES_VERSION=7.17.6
+
+    wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-$ES_VERSION-linux-x86_64.tar.gz
+    wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-$ES_VERSION-linux-x86_64.tar.gz.sha512
+    shasum -a 512 -c elasticsearch-$ES_VERSION-linux-x86_64.tar.gz.sha512
+
+    tar -xvzf elasticsearch-$ES_VERSION-linux-x86_64.tar.gz
+
+    rm -rf elasticsearch-$ES_VERSION/jdk
+    mv elasticsearch-$ES_VERSION/* ./
+
+    rm -rf elasticsearch-$ES_VERSION elasticsearch-$ES_VERSION-linux-x86_64.tar.gz elasticsearch-$ES_VERSION-linux-x86_64.tar.gz.sha512
+
+    mv config config-init
+    sed -i 's/#http.port: 9200/http.port: 8888/g' config-init/elasticsearch.yml
+
+
+  deploy: |
+    set -e
+    rsync -r config-init/* config/
+
+    export ENV_MEMORY_LIMIT=`cat /run/config.json | jq .info.limits.memory`
+    MEMORY_LIMIT=768
+
+    if [ "$ENV_MEMORY_LIMIT" -lt "$MEMORY_LIMIT" ]; then
+      echo "Not enough memory ($ENV_MEMORY_LIMIT MB) to run Elasticsearch, you should consider moving to a bigger plan."
+    fi
